@@ -1,0 +1,13 @@
+# Secrets
+.env
+.env.local
+.env.production
+
+# Dependencies (Too heavy to upload)
+node_modules/
+dist/
+build/
+
+# OS generated files
+.DS_Store
+Thumbs.db

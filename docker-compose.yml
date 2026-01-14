@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Backend Service
+  server:
+    build: ./server
+    ports:
+      - "5015:5015"
+    environment:
+      - PORT=5015
+      # Now pulls directly from your .env file
+      - MONGO_URI=${MONGO_URI}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - mongo
+
+  # Frontend Service
+  client:
+    build: ./client
+    ports:
+      - "3000:3000"
+    stdin_open: true 
+    tty: true
+    environment:
+      # Keep this as localhost for local Docker running
+      - REACT_APP_API_URL=http://localhost:5015
+    depends_on:
+      - server
+
+  # Database Service (Local Fallback)
+  # Even if you use Atlas, keeping this here allows you to switch back 
+  # to local DB just by changing the MONGO_URI in .env
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
