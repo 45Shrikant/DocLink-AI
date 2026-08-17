@@ -20,45 +20,53 @@ function ResetPassword() {
     e.preventDefault();
     if (!password) {
       return toast.error("Password is required");
+    } else if (password.length < 5) {
+      return toast.error("Password must be at least 5 characters long");
     }
 
     try {
       const response = await axios.post(`/user/resetpassword/${id}/${token}`, { password });
 
       if (response.status === 200) {
-        toast.success("Password reset successfully");
-        navigate('/login');
+        toast.success("Password reset successfully! Please login.");
+        navigate("/login");
       } else {
-        toast.error("Failed to reset password. Please try again.");
+        toast.error("Failed to reset password. Token may be expired.");
       }
     } catch (error) {
       console.error("Error resetting password:", error);
-      toast.error("Failed to reset password. Please try again.");
+      toast.error("Invalid or expired token. Please try again.");
     }
   };
 
   return (
     <>
       <Navbar />
-      <section className="register-section flex-center">
-      <div className="register-container flex-center">
-          <h2 className="form-heading">Reset Password</h2>
+      <section className="register-section">
+        <div className="register-container">
+          <h2 className="form-heading">Create New Password</h2>
+          <p className="form-subheading">Enter your new secure password</p>
+
           <form onSubmit={handleFormSubmit} className="register-form">
             <input
               type="password"
               name="password"
               className="form-input"
-              placeholder="Enter your new password"
+              placeholder="Enter new password"
               value={password}
               onChange={handlePasswordChange}
+              required
             />
             <button type="submit" className="btn form-btn">
-              Reset Password
+              Update Password
             </button>
           </form>
-          <NavLink className="login-link" to="/login">
-            Back to Login
-          </NavLink>
+
+          <div className="auth-links">
+            <NavLink className="login-link" to="/login">
+              Back to Login
+            </NavLink>
+          </div>
         </div>
       </section>
     </>

@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import Hero from "../components/Hero";
 import Navbar from "../components/Navbar";
 import HomeCircles from "../components/HomeCircles";
+import AiChat from "../components/AiChat";
 
 const Home = () => {
   return (
@@ -13,6 +14,7 @@ const Home = () => {
       <Hero />
       <AboutUs />
       <HomeCircles />
+      <AiChat />
       <Contact />
       <Footer />
     </>

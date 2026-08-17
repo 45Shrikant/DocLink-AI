@@ -1,13 +1,92 @@
-@import url(app.css);
+@import url("app.css");
 
-.doctors {
-  margin-bottom: 5rem;
+.doctors-page-section {
+  padding: 3rem 0 5rem;
+  background: var(--bg-page);
+  min-height: 85vh;
+}
+
+.doctors-header-area {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.doctors-header-area p {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  max-width: 600px;
+  margin: 0.5rem auto 0;
+}
+
+.doctors-filter-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  max-width: 750px;
+  width: 90%;
+  margin: 0 auto 3rem;
+  background: #ffffff;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+}
+
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.search-input-wrapper svg {
+  position: absolute;
+  left: 1.25rem;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+.search-input-wrapper input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0.65rem 1rem 0.65rem 3rem;
+  font-size: 0.95rem;
+  font-family: var(--font-family);
+  outline: none;
+}
+
+.specialty-select {
+  border: none;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-full);
+  padding: 0.65rem 1.25rem;
+  font-size: 0.9rem;
+  font-family: var(--font-family);
+  color: var(--text-secondary);
+  outline: none;
+  cursor: pointer;
+  max-width: 200px;
 }
 
 .doctors-card-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-evenly;
-  gap: 3rem;
-  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+  width: 90%;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .doctors-filter-bar {
+    flex-direction: column;
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+  }
+  .specialty-select {
+    width: 100%;
+    max-width: none;
+  }
 }

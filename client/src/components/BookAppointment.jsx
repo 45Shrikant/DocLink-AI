@@ -3,6 +3,9 @@ import "../styles/bookappointment.css";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { IoMdClose } from "react-icons/io";
+import { FaCalendarCheck, FaCreditCard, FaUserMd } from "react-icons/fa";
+
+axios.defaults.baseURL = process.env.REACT_APP_SERVER_DOMAIN;
 
 const BookAppointment = ({ setModalOpen, ele }) => {
   const [formDetails, setFormDetails] = useState({
@@ -17,50 +20,51 @@ const BookAppointment = ({ setModalOpen, ele }) => {
 
   const inputChange = (e) => {
     const { name, value } = e.target;
-    return setFormDetails({
+    setFormDetails({
       ...formDetails,
       [name]: value,
     });
   };
 
-  // --- NEW: Payment Logic ---
+  const doctorName = `Dr. ${ele?.userId?.firstname || ""} ${ele?.userId?.lastname || ""}`.trim();
+  const doctorPic =
+    ele?.userId?.pic ||
+    "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg";
+
+  // Handle Stripe Payment
   const handlePayment = async (e) => {
     e.preventDefault();
-    
-    // 1. Basic Validation
     if (!formDetails.date || !formDetails.time || !formDetails.number) {
-        return toast.error("Please fill Date, Time, and Number");
+      return toast.error("Please fill Date, Time, and Mobile Number");
     }
 
-    const toastId = toast.loading("Redirecting to Payment...");
-
+    const toastId = toast.loading("Redirecting to Stripe Payment...");
     try {
-      // 2. Call the Payment Endpoint we created earlier
-      // Note: We are sending the doctor's name to appear on the Receipt
-      const { data } = await axios.post(
-        "/api/payment/create-checkout-session", 
-        {
-            doctorName: `${ele?.userId?.firstname} ${ele?.userId?.lastname}`,
-            price: 50 // You can make this dynamic if needed
-        }
-      );
+      const { data } = await axios.post("/payment/create-checkout-session", {
+        doctorName: doctorName,
+        price: ele?.fees || 50,
+      });
 
-      // 3. Redirect user to Stripe
       if (data.url) {
         window.location.href = data.url;
       }
     } catch (error) {
-      toast.error("Payment failed", { id: toastId });
+      toast.error("Payment initiation failed", { id: toastId });
       console.error(error);
     }
   };
 
+  // Standard Appointment Booking
   const bookAppointment = async (e) => {
     e.preventDefault();
+    if (!formDetails.date || !formDetails.time || !formDetails.number || !formDetails.age || !formDetails.gender) {
+      return toast.error("Please fill all required fields");
+    }
+
     try {
       await toast.promise(
         axios.post(
-          "/api/appointment/bookappointment",
+          "/appointment/bookappointment",
           {
             doctorId: ele?.userId?._id,
             date: formDetails.date,
@@ -70,7 +74,7 @@ const BookAppointment = ({ setModalOpen, ele }) => {
             gender: formDetails.gender,
             number: formDetails.number,
             familyDiseases: formDetails.familyDiseases,
-            doctorname: `${ele?.userId?.firstname} ${ele?.userId?.lastname}`,
+            doctorname: doctorName,
           },
           {
             headers: {
@@ -79,117 +83,149 @@ const BookAppointment = ({ setModalOpen, ele }) => {
           }
         ),
         {
-          success: "Appointment booked successfully",
+          success: "Appointment booked successfully!",
           error: "Unable to book appointment",
-          loading: "Booking appointment...",
+          loading: "Confirming appointment slot...",
         }
       );
       setModalOpen(false);
     } catch (error) {
-      return error;
+      console.error(error);
     }
   };
 
   return (
-    <>
-      <div className="modal flex-center">
-        <div className="modal__content">
-          <h2 className="page-heading">Book Appointment</h2>
-          <IoMdClose
-            onClick={() => {
-              setModalOpen(false);
-            }}
-            className="close-btn"
-          />
-          <div className="register-container flex-center book">
-            <form className="register-form">
-              <input
-                type="date"
-                name="date"
-                className="form-input"
-                value={formDetails.date}
-                onChange={inputChange}
-              />
-              <input
-                type="time"
-                name="time"
-                className="form-input"
-                value={formDetails.time}
-                onChange={inputChange}
-              />
-              <input
-                type="number"
-                name="age"
-                placeholder="Age"
-                className="form-input"
-                value={formDetails.age}
-                onChange={inputChange}
-                required
-              />
-              <input
-                type="text"
-                name="bloodGroup"
-                placeholder="Blood Group (Optional)"
-                className="form-input"
-                value={formDetails.bloodGroup}
-                onChange={inputChange}
-              />
-              <select
-                name="gender"
-                className="form-input"
-                value={formDetails.gender}
-                onChange={inputChange}
-                required
-              >
-                <option value="">Select Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-              <input
-                type="number"
-                name="number"
-                placeholder="Mobile Number"
-                className="form-input"
-                value={formDetails.number}
-                onChange={inputChange}
-                required
-              />
+    <div className="modal-overlay" onClick={() => setModalOpen(false)}>
+      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div className="modal-doctor-info">
+            <img src={doctorPic} alt={doctorName} className="modal-doc-avatar" />
+            <div className="modal-doc-text">
+              <h3>{doctorName}</h3>
+              <p>{ele?.specialization || "Specialist"} • ${ele?.fees || 50} Consultation</p>
+            </div>
+          </div>
+          <button className="modal-close-btn" onClick={() => setModalOpen(false)}>
+            <IoMdClose />
+          </button>
+        </div>
+
+        <div className="modal-body">
+          <form className="booking-form">
+            <div className="form-grid-2">
+              <div className="form-group">
+                <label>Appointment Date *</label>
+                <input
+                  type="date"
+                  name="date"
+                  className="form-input"
+                  value={formDetails.date}
+                  onChange={inputChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Preferred Time *</label>
+                <input
+                  type="time"
+                  name="time"
+                  className="form-input"
+                  value={formDetails.time}
+                  onChange={inputChange}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-grid-2">
+              <div className="form-group">
+                <label>Patient Age *</label>
+                <input
+                  type="number"
+                  name="age"
+                  placeholder="e.g. 32"
+                  className="form-input"
+                  value={formDetails.age}
+                  onChange={inputChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Gender *</label>
+                <select
+                  name="gender"
+                  className="form-input"
+                  value={formDetails.gender}
+                  onChange={inputChange}
+                  required
+                >
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="form-grid-2">
+              <div className="form-group">
+                <label>Blood Group (Optional)</label>
+                <input
+                  type="text"
+                  name="bloodGroup"
+                  placeholder="e.g. O+, A-, B+"
+                  className="form-input"
+                  value={formDetails.bloodGroup}
+                  onChange={inputChange}
+                />
+              </div>
+              <div className="form-group">
+                <label>Mobile Number *</label>
+                <input
+                  type="tel"
+                  name="number"
+                  placeholder="e.g. +1 234 567 8900"
+                  className="form-input"
+                  value={formDetails.number}
+                  onChange={inputChange}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Medical History / Symptoms Notes</label>
               <textarea
                 name="familyDiseases"
-                placeholder="Family Diseases"
+                placeholder="Mention any existing conditions, allergies, or symptoms..."
                 className="form-input"
                 value={formDetails.familyDiseases}
                 onChange={inputChange}
+                rows="3"
               ></textarea>
+            </div>
 
-              <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                  {/* Standard Booking Button */}
-                  <button
-                    type="submit"
-                    className="btn form-btn"
-                    onClick={bookAppointment}
-                    style={{ flex: 1 }}
-                  >
-                    Book Only
-                  </button>
-                  
-                  {/* NEW: Payment Button */}
-                  <button
-                    type="button" 
-                    className="btn form-btn"
-                    onClick={handlePayment}
-                    style={{ flex: 1, backgroundColor: "#28a745" }} // Green color for payment
-                  >
-                    Pay & Book ($50)
-                  </button>
-              </div>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="btn btn-book-regular"
+                onClick={bookAppointment}
+              >
+                <FaCalendarCheck /> Book Only
+              </button>
 
-            </form>
-          </div>
+              <button
+                type="button"
+                className="btn btn-book-pay"
+                onClick={handlePayment}
+              >
+                <FaCreditCard /> Pay & Book (${ele?.fees || 50})
+              </button>
+            </div>
+          </form>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

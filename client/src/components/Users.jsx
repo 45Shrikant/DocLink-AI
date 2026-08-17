@@ -6,6 +6,8 @@ import { setLoading } from "../redux/reducers/rootSlice";
 import { useDispatch, useSelector } from "react-redux";
 import Empty from "./Empty";
 import fetchData from "../helper/apiCall";
+import "../styles/user.css";
+import { FaTrashAlt, FaSearch, FaFilter } from "react-icons/fa";
 
 axios.defaults.baseURL = process.env.REACT_APP_SERVER_DOMAIN;
 
@@ -19,22 +21,18 @@ const Users = () => {
   const getAllUsers = async () => {
     try {
       dispatch(setLoading(true));
-      let url = "/user/getallusers";
-      if (filter !== "all") {
-        url += `?filter=${filter}`;
-      }
-      if (searchTerm.trim() !== "") {
-        url += `${filter !== "all" ? "&" : "?"}search=${searchTerm}`;
-      }
-      const temp = await fetchData(url);
-      setUsers(temp);
+      const temp = await fetchData("/user/getallusers");
+      setUsers(temp || []);
       dispatch(setLoading(false));
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+      dispatch(setLoading(false));
+    }
   };
 
   const deleteUser = async (userId) => {
     try {
-      const confirm = window.confirm("Are you sure you want to delete?");
+      const confirm = window.confirm("Are you sure you want to remove this user?");
       if (confirm) {
         await toast.promise(
           axios.delete("/user/deleteuser", {
@@ -44,8 +42,8 @@ const Users = () => {
             data: { userId },
           }),
           {
-            pending: "Deleting in...",
-            success: "User deleted successfully",
+            pending: "Deleting user...",
+            success: "User removed successfully",
             error: "Unable to delete user",
             loading: "Deleting user...",
           }
@@ -53,7 +51,7 @@ const Users = () => {
         getAllUsers();
       }
     } catch (error) {
-      return error;
+      console.error(error);
     }
   };
 
@@ -61,14 +59,18 @@ const Users = () => {
     getAllUsers();
   }, []);
 
-  const filteredUsers = users.filter((doc) => {
-    if (filter === "all") {
-      return true;
-    } else if (filter === "firstname") {
-      return doc.firstname.toLowerCase().includes(searchTerm.toLowerCase());
-    } else {
-      return true;
+  const filteredUsers = users.filter((u) => {
+    const fullName = `${u.firstname || ""} ${u.lastname || ""}`.toLowerCase();
+    const email = (u.email || "").toLowerCase();
+    const query = searchTerm.toLowerCase();
+    const matchesSearch = fullName.includes(query) || email.includes(query);
+
+    if (filter === "doctors") {
+      return matchesSearch && u.isDoctor;
+    } else if (filter === "patients") {
+      return matchesSearch && !u.isDoctor && !u.isAdmin;
     }
+    return matchesSearch;
   });
 
   return (
@@ -77,83 +79,112 @@ const Users = () => {
         <Loading />
       ) : (
         <section className="user-section">
-          <div className="ayx">
-            <div className="filter">
-              <label htmlFor="filter">Filter by:</label>
-              <select
-                id="filter"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-              >
-                <option value="all">All</option>
-                <option value="firstname">Name</option>
-
-              </select>
+          <div className="table-page-header">
+            <div>
+              <h2>User Management</h2>
+              <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
+                Total: {users.length} registered accounts
+              </p>
             </div>
 
-            <div className="search">
-              <label htmlFor="search">Search:</label>
-              <input
-                type="text"
-                className="form-input"
-                id="search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search"
-              />
+            <div className="table-controls">
+              <div className="control-item">
+                <FaFilter style={{ color: "var(--text-muted)" }} />
+                <label htmlFor="filter">Role:</label>
+                <select
+                  id="filter"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                >
+                  <option value="all">All Users</option>
+                  <option value="patients">Patients</option>
+                  <option value="doctors">Doctors</option>
+                </select>
+              </div>
+
+              <div className="control-item">
+                <FaSearch style={{ color: "var(--text-muted)" }} />
+                <input
+                  type="text"
+                  id="search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search name or email..."
+                />
+              </div>
             </div>
           </div>
-          <h3 className="home-sub-heading">All Users</h3>
-          {users.length > 0 ? (
-            <div className="user-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>S.No</th>
-                    <th>Pic</th>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Email</th>
-                    <th>Mobile No.</th>
-                    <th>Age</th>
-                    <th>Gender</th>
-                    <th>Is Doctor</th>
-                    <th>Remove</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredUsers.map((ele, i) => (
-                    <tr key={ele._id}>
-                      <td>{i + 1}</td>
-                      <td>
-                        <img
-                          className="user-table-pic"
-                          src={ele.pic}
-                          alt={ele.firstname}
-                        />
-                      </td>
-                      <td>{ele.firstname}</td>
-                      <td>{ele.lastname}</td>
-                      <td>{ele.email}</td>
-                      <td>{ele.mobile}</td>
-                      <td>{ele.age}</td>
-                      <td>{ele.gender}</td>
-                      <td>{ele.isDoctor ? "Yes" : "No"}</td>
-                      <td className="select">
-                        <button
-                          className="btn user-btn"
-                          onClick={() => deleteUser(ele._id)}
-                        >
-                          Remove
-                        </button>
-                      </td>
+
+          {filteredUsers.length > 0 ? (
+            <div className="user-table-card">
+              <div className="table-responsive">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>User</th>
+                      <th>Email</th>
+                      <th>Mobile</th>
+                      <th>Age / Gender</th>
+                      <th>Role</th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((ele, i) => (
+                      <tr key={ele._id}>
+                        <td>{i + 1}</td>
+                        <td>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                            <img
+                              className="user-table-pic"
+                              src={
+                                ele.pic ||
+                                "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"
+                              }
+                              alt={ele.firstname}
+                            />
+                            <div>
+                              <div style={{ fontWeight: 600 }}>
+                                {ele.firstname} {ele.lastname}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>{ele.email}</td>
+                        <td>{ele.mobile || "—"}</td>
+                        <td>
+                          {ele.age ? `${ele.age} yrs` : "—"} / {ele.gender || "—"}
+                        </td>
+                        <td>
+                          <span
+                            className={`badge ${
+                              ele.isAdmin
+                                ? "badge-warning"
+                                : ele.isDoctor
+                                ? "badge-primary"
+                                : "badge-success"
+                            }`}
+                          >
+                            {ele.isAdmin ? "Admin" : ele.isDoctor ? "Doctor" : "Patient"}
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            className="btn btn-sm btn-remove"
+                            onClick={() => deleteUser(ele._id)}
+                          >
+                            <FaTrashAlt /> Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ) : (
-            <Empty />
+            <Empty message="No matching users found." />
           )}
         </section>
       )}

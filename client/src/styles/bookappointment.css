@@ -1,46 +1,156 @@
-@import url(app.css);
+@import url("app.css");
 
-.modal {
-  position: absolute;
-  top: 0%;
-  left: 0%;
-  width: 100%;
-  height: 99vh;
-  /* background-color: rgba(0, 0, 0, 0.322); */
-  z-index: 1;
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+  overflow-y: auto;
 }
 
-.modal__content {
+.modal-card {
+  background: #ffffff;
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 580px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  animation: modalScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScaleIn {
+  from { opacity: 0; transform: scale(0.94) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 1.5rem 1.75rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-doctor-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.modal-doc-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
+.modal-doc-text h3 {
+  font-size: 1.15rem;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.modal-doc-text p {
+  font-size: 0.85rem;
+  color: var(--primary);
+  font-weight: 600;
+  margin: 0;
+}
+
+.modal-close-btn {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.modal-close-btn:hover {
+  background: var(--bg-subtle);
+  color: var(--danger);
+  border-color: var(--danger-border);
+}
+
+.modal-body {
+  padding: 1.75rem;
+}
+
+.booking-form {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2rem;
-  width: 30%;
-  padding: 2rem;
-  border: 1px solid var(--light-blue);
-  border-radius: 10px;
-  color: var(--light-blue);
-  background-color: rgb(30, 55, 90);
-  position: relative;
+  gap: 1.15rem;
 }
 
-.modal__content h2 {
-  color: var(--light-blue);
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
 }
 
-.modal__content .btn {
-  font-size: 0.9rem;
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
-.close-btn {
-  position: absolute;
-  top: 2%;
-  right: 2%;
-  font-size: 1.5rem;
-  color: var(--secondary-color);
-  cursor: pointer;
+.form-group label {
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
-.book {
-  width: 80%;
+.modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.btn-book-regular {
+  background: #ffffff;
+  color: var(--text-primary) !important;
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-book-regular:hover {
+  background: var(--bg-subtle);
+  border-color: #94a3b8;
+}
+
+.btn-book-pay {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+}
+
+.btn-book-pay:hover {
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+@media (max-width: 600px) {
+  .form-grid-2, .modal-actions {
+    grid-template-columns: 1fr;
+  }
 }

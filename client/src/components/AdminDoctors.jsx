@@ -7,36 +7,31 @@ import { useDispatch, useSelector } from "react-redux";
 import Empty from "./Empty";
 import fetchData from "../helper/apiCall";
 import "../styles/user.css";
+import { FaTrashAlt, FaSearch, FaUserMd } from "react-icons/fa";
 
 axios.defaults.baseURL = process.env.REACT_APP_SERVER_DOMAIN;
 
 const AdminDoctors = () => {
   const [doctors, setDoctors] = useState([]);
-  const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.root);
 
   const getAllDoctors = async () => {
     try {
       dispatch(setLoading(true));
-      let url = "/doctor/getalldoctors";
-      if (filter !== "all") {
-        url += `?filter=${filter}`;
-      }
-      if (searchTerm.trim() !== "") {
-        url += `${filter !== "all" ? "&" : "?"}search=${searchTerm}`;
-      }
-      const temp = await fetchData(url);
-      setDoctors(temp);
+      const temp = await fetchData("/doctor/getalldoctors");
+      setDoctors(temp || []);
       dispatch(setLoading(false));
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+      dispatch(setLoading(false));
+    }
   };
 
   const deleteUser = async (userId) => {
     try {
-      const confirm = window.confirm("Are you sure you want to delete?");
+      const confirm = window.confirm("Are you sure you want to revoke doctor status?");
       if (confirm) {
         await toast.promise(
           axios.put(
@@ -49,15 +44,15 @@ const AdminDoctors = () => {
             }
           ),
           {
-            success: "Doctor deleted successfully",
-            error: "Unable to delete Doctor",
-            loading: "Deleting Doctor...",
+            success: "Doctor access revoked",
+            error: "Unable to revoke doctor status",
+            loading: "Updating status...",
           }
         );
         getAllDoctors();
       }
     } catch (error) {
-      return error;
+      console.error(error);
     }
   };
 
@@ -66,20 +61,10 @@ const AdminDoctors = () => {
   }, []);
 
   const filteredDoctors = doctors.filter((doc) => {
-    if (filter === "all") {
-      return true;
-    } else if (filter === "specialization") {
-      return doc.specialization
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-    } else if (filter === "firstname") {
-      return (
-        doc.userId &&
-        doc.userId.firstname.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    } else {
-      return true;
-    }
+    const fullName = `${doc?.userId?.firstname || ""} ${doc?.userId?.lastname || ""}`.toLowerCase();
+    const specialty = (doc?.specialization || "").toLowerCase();
+    const query = searchTerm.toLowerCase();
+    return fullName.includes(query) || specialty.includes(query);
   });
 
   return (
@@ -88,87 +73,89 @@ const AdminDoctors = () => {
         <Loading />
       ) : (
         <section className="user-section">
-          <div className="ayx">
-            <div className="filter">
-              <label htmlFor="filter">Filter by:</label>
-              <select
-                id="filter"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-              >
-                <option value="all">All</option>
-                <option value="firstname">Name</option>
-                <option value="specialization">Specialization</option>
-              </select>
+          <div className="table-page-header">
+            <div>
+              <h2>Verified Doctors Directory</h2>
+              <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
+                Total: {doctors.length} active practitioners
+              </p>
             </div>
 
-            <div className="search">
-              <label htmlFor="search">Search:</label>
-              <input
-                type="text"
-                className="form-input"
-                id="search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search"
-              />
+            <div className="table-controls">
+              <div className="control-item">
+                <FaSearch style={{ color: "var(--text-muted)" }} />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search doctor or specialty..."
+                />
+              </div>
             </div>
           </div>
-          <h3 className="home-sub-heading">All Doctors</h3>
+
           {filteredDoctors.length > 0 ? (
-            <div className="user-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>S.No</th>
-                    <th>Pic</th>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Email</th>
-                    <th>Mobile No.</th>
-                    <th>Experience</th>
-                    <th>Specialization</th>
-                    <th>Fees</th>
-                    <th>Remove</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredDoctors.map((ele, i) => {
-                    return (
+            <div className="user-table-card">
+              <div className="table-responsive">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Doctor</th>
+                      <th>Email</th>
+                      <th>Mobile</th>
+                      <th>Specialization</th>
+                      <th>Experience</th>
+                      <th>Fee</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredDoctors.map((ele, i) => (
                       <tr key={ele?._id}>
                         <td>{i + 1}</td>
                         <td>
-                          <img
-                            className="user-table-pic"
-                            src={ele?.userId?.pic}
-                            alt={ele?.userId?.firstname}
-                          />
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                            <img
+                              className="user-table-pic"
+                              src={
+                                ele?.userId?.pic ||
+                                "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"
+                              }
+                              alt={ele?.userId?.firstname}
+                            />
+                            <div style={{ fontWeight: 600 }}>
+                              Dr. {ele?.userId?.firstname} {ele?.userId?.lastname}
+                            </div>
+                          </div>
                         </td>
-                        <td>{ele?.userId?.firstname}</td>
-                        <td>{ele?.userId?.lastname}</td>
                         <td>{ele?.userId?.email}</td>
-                        <td>{ele?.userId?.mobile}</td>
-                        <td>{ele?.experience}</td>
-                        <td>{ele?.specialization}</td>
-                        <td>{ele?.fees}</td>
-                        <td className="select">
+                        <td>{ele?.userId?.mobile || "—"}</td>
+                        <td>
+                          <span className="badge badge-primary">
+                            {ele?.specialization || "General Physician"}
+                          </span>
+                        </td>
+                        <td>{ele?.experience ? `${ele.experience} yrs` : "—"}</td>
+                        <td style={{ fontWeight: 700, color: "var(--primary)" }}>
+                          ${ele?.fees || 50}
+                        </td>
+                        <td>
                           <button
-                            className="btn user-btn"
-                            onClick={() => {
-                              deleteUser(ele?.userId?._id);
-                            }}
+                            className="btn btn-sm btn-remove"
+                            onClick={() => deleteUser(ele?.userId?._id)}
                           >
-                            Remove
+                            <FaTrashAlt /> Revoke
                           </button>
                         </td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ) : (
-            <Empty />
+            <Empty message="No active doctors found." />
           )}
         </section>
       )}

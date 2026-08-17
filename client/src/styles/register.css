@@ -1,116 +1,149 @@
-@import url(app.css);
+@import url("app.css");
 
 .register-section {
   width: 100%;
-  height: 100vh;
+  min-height: 85vh;
+  padding: 3.5rem 1rem;
+  background: radial-gradient(circle at 50% 20%, #e0f2fe 0%, var(--bg-page) 70%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .register-container {
+  background: #ffffff;
+  border-radius: var(--radius-xl);
+  padding: 2.5rem 2.25rem;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border);
+  display: flex;
   flex-direction: column;
-  gap: 2rem;
-  width: 30%;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.register-container.wide {
+  max-width: 580px;
 }
 
 .form-heading {
-  font-size: 2rem;
+  font-size: 1.85rem;
+  font-weight: 800;
+  text-align: center;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.form-subheading {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: -1rem;
+  margin-bottom: 0.5rem;
 }
 
 .register-form {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.15rem;
 }
 
-.form-input,
-textarea,
-select {
-  font-size: 1rem;
-  background-color: rgb(234, 234, 234);
-  padding: 0.8rem 1.5rem;
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.role-toggle-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.role-toggle-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.role-pills {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  background: var(--bg-subtle);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.role-pill-btn {
+  padding: 0.55rem;
   border: none;
-  border-radius: 5px;
+  background: transparent;
+  font-size: 0.85rem;
+  font-weight: 600;
   font-family: var(--font-family);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: center;
 }
 
-.form-input:focus,
-textarea:focus,
-select:focus {
-  outline: none;
+.role-pill-btn.active {
+  background: #ffffff;
+  color: var(--primary);
+  box-shadow: var(--shadow-sm);
 }
 
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+.file-upload-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.file-upload-wrapper label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.form-btn {
+  width: 100%;
+  padding: 0.85rem;
+  font-size: 1rem;
+  margin-top: 0.5rem;
+}
+
+.auth-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
 .login-link {
-  color: var(--darker-blue);
+  color: var(--primary);
+  font-weight: 600;
+  transition: var(--transition);
 }
 
-@media (max-width: 1184px) {
+.login-link:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+@media (max-width: 540px) {
   .register-container {
-    width: 30%;
+    padding: 2rem 1.5rem;
   }
-}
-
-@media (max-width: 1120px) {
-  .register-container {
-    width: 35%;
+  .form-row-2 {
+    grid-template-columns: 1fr;
   }
-}
-
-@media (max-width: 746px) {
-  .register-container {
-    width: 40%;
-  }
-}
-
-@media (max-width: 600px) {
-  .register-container {
-    width: 60%;
-  }
-}
-
-@media (max-width: 408px) {
-  .register-container {
-    width: 70%;
-  }
-}
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.dropdown-toggle {
-  background-color: #ffffff;
-  border: 1px solid #cccccc;
-  color: #333333;
-  padding: 8px 12px;
-  cursor: pointer;
-}
-
-.dropdown-menu {
-  display: none;
-  position: absolute;
-  background-color: #ffffff;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-  z-index: 1;
-}
-
-.dropdown-menu.show {
-  display: block;
-}
-
-.dropdown-item {
-  padding: 10px 12px;
-  text-decoration: none;
-  display: block;
-  color: #333333;
-}
-
-.dropdown-item:hover {
-  background-color: #f0f0f0;
 }

@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Empty from "./Empty";
 import fetchData from "../helper/apiCall";
 import "../styles/user.css";
+import { FaCheckCircle, FaCalendarAlt } from "react-icons/fa";
 
 axios.defaults.baseURL = process.env.REACT_APP_SERVER_DOMAIN;
 
@@ -15,13 +16,16 @@ const AdminAppointments = () => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.root);
 
-  const getAllAppoint = async (e) => {
+  const getAllAppoint = async () => {
     try {
       dispatch(setLoading(true));
       const temp = await fetchData(`/appointment/getallappointments`);
-      setAppointments(temp);
+      setAppointments(temp || []);
       dispatch(setLoading(false));
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+      dispatch(setLoading(false));
+    }
   };
 
   useEffect(() => {
@@ -35,7 +39,7 @@ const AdminAppointments = () => {
           "/appointment/completed",
           {
             appointid: ele?._id,
-            doctorId: ele?.doctorId._id,
+            doctorId: ele?.doctorId?._id,
             doctorname: `${ele?.userId?.firstname} ${ele?.userId?.lastname}`,
           },
           {
@@ -45,15 +49,15 @@ const AdminAppointments = () => {
           }
         ),
         {
-          success: "Appointment booked successfully",
-          error: "Unable to book appointment",
-          loading: "Booking appointment...",
+          success: "Appointment marked as completed",
+          error: "Unable to update status",
+          loading: "Updating status...",
         }
       );
 
       getAllAppoint();
     } catch (error) {
-      return error;
+      console.error(error);
     }
   };
 
@@ -63,71 +67,81 @@ const AdminAppointments = () => {
         <Loading />
       ) : (
         <section className="user-section">
-          <h3 className="home-sub-heading">All Appointments</h3>
-          {appointments.length > 0 ? (
-            <div className="user-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>S.No</th>
-                    <th>Doctor</th>
-                    <th>P Name</th>
-                    <th>P Age</th>
-                    <th>P Gender</th>
-                    <th>P Mobile No.</th>
-                    <th>P bloodGroup</th>
-                    <th>P Family Diseases</th>
-                    <th>Appointment Date</th>
-                    <th>Appointment Time</th>
-                    <th>Booking Date</th>
-                    <th>Booking Time</th>
-                    <th>Status</th>
+          <div className="table-page-header">
+            <div>
+              <h2>All Appointments</h2>
+              <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
+                Total: {appointments.length} appointment records
+              </p>
+            </div>
+          </div>
 
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {appointments?.map((ele, i) => {
-                    return (
+          {appointments.length > 0 ? (
+            <div className="user-table-card">
+              <div className="table-responsive">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Doctor</th>
+                      <th>Patient</th>
+                      <th>Patient Contact</th>
+                      <th>Age / Gender</th>
+                      <th>Blood Group</th>
+                      <th>Scheduled Date & Time</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {appointments.map((ele, i) => (
                       <tr key={ele?._id}>
                         <td>{i + 1}</td>
-                        <td>
-                          {ele?.doctorId?.firstname +
-                            " " +
-                            ele?.doctorId?.lastname}
+                        <td style={{ fontWeight: 600 }}>
+                          Dr. {ele?.doctorId?.firstname} {ele?.doctorId?.lastname}
                         </td>
                         <td>
-                          {ele?.userId?.firstname + " " + ele?.userId?.lastname}
+                          {ele?.userId?.firstname} {ele?.userId?.lastname}
                         </td>
-                        <td>{ele?.age}</td>
-                        <td>{ele?.gender}</td>
-                        <td>{ele?.number}</td>
-                        <td>{ele?.bloodGroup}</td>
-                        <td>{ele?.familyDiseases}</td>
-                        <td>{ele?.date}</td>
-                        <td>{ele?.time}</td>
-                        <td>{ele?.createdAt.split("T")[0]}</td>
-                        <td>{ele?.updatedAt.split("T")[1].split(".")[0]}</td>
-                        <td>{ele?.status}</td>
+                        <td>{ele?.number || "—"}</td>
+                        <td>
+                          {ele?.age ? `${ele.age} yrs` : "—"} / {ele?.gender || "—"}
+                        </td>
+                        <td>{ele?.bloodGroup || "—"}</td>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{ele?.date}</div>
+                          <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>
+                            {ele?.time}
+                          </div>
+                        </td>
+                        <td>
+                          <span
+                            className={`badge ${
+                              ele?.status === "Completed"
+                                ? "badge-success"
+                                : "badge-warning"
+                            }`}
+                          >
+                            {ele?.status || "Pending"}
+                          </span>
+                        </td>
                         <td>
                           <button
-                            className={`btn user-btn accept-btn ${
-                              ele?.status === "Completed" ? "disable-btn" : ""
-                            }`}
+                            className="btn btn-sm btn-complete"
                             disabled={ele?.status === "Completed"}
                             onClick={() => complete(ele)}
                           >
-                            Complete
+                            <FaCheckCircle /> Complete
                           </button>
                         </td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ) : (
-            <Empty />
+            <Empty message="No appointment records found." />
           )}
         </section>
       )}

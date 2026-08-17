@@ -6,6 +6,7 @@ import {
   FaUserMd,
   FaUsers,
   FaEnvelope,
+  FaHeartbeat,
 } from "react-icons/fa";
 import "../styles/sidebar.css";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -17,9 +18,9 @@ const Sidebar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const sidebar = [
+  const sidebarLinks = [
     {
-      name: "Home",
+      name: "Dashboard",
       path: "/dashboard/home",
       icon: <FaHome />,
     },
@@ -44,7 +45,7 @@ const Sidebar = () => {
       icon: <FaEnvelope />,
     },
     {
-      name: "Profile",
+      name: "My Profile",
       path: "/dashboard/aprofile",
       icon: <FaUser />,
     },
@@ -57,26 +58,34 @@ const Sidebar = () => {
   };
 
   return (
-    <>
-      <section className="sidebar-section flex-center">
-        <div className="sidebar-container">
-          <ul>
-            {sidebar.map((ele, i) => {
-              return (
-                <li key={i}>
-                  {ele.icon}
-                  <NavLink to={ele.path}>{ele.name}</NavLink>
-                </li>
-              );
-            })}
-          </ul>
-          <div className="logout-container">
-            <MdLogout />
-            <p onClick={logoutFunc}>Logout</p>
-          </div>
+    <aside className="sidebar-section">
+      <div>
+        <div className="sidebar-brand">
+          <FaHeartbeat />
+          <span>DocLink Admin</span>
         </div>
-      </section>
-    </>
+
+        <nav className="sidebar-nav">
+          {sidebarLinks.map((ele, i) => (
+            <NavLink
+              to={ele.path}
+              key={i}
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
+              {ele.icon}
+              <span>{ele.name}</span>
+            </NavLink>
+          ))}
+        </nav>
+      </div>
+
+      <div className="sidebar-footer">
+        <button className="sidebar-logout-btn" onClick={logoutFunc}>
+          <MdLogout />
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
   );
 };
 

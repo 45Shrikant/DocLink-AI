@@ -46,7 +46,7 @@ const schema = mongoose.Schema(
     status: {
       type: String,
       default: "",
-    },
+    }, 
     pic: {
       type: String,
       default:

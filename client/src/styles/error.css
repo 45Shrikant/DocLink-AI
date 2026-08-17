@@ -1,11 +1,32 @@
-@import url(app.css);
+@import url("app.css");
 
-.error {
+.error-page {
+  min-height: 85vh;
   display: flex;
   flex-direction: column;
-  height: 90vh;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 1rem;
 }
 
-.error h2 {
-  font-size: 3rem;
+.error-code {
+  font-size: 6rem;
+  font-weight: 900;
+  line-height: 1;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
+}
+
+.error-page h2 {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.error-page p {
+  color: var(--text-muted);
+  max-width: 480px;
+  margin-bottom: 2rem;
 }

@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import "../styles/contact.css";
+import "../styles/doctorapply.css";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { FaUserMd, FaPaperPlane } from "react-icons/fa";
 
 axios.defaults.baseURL = process.env.REACT_APP_SERVER_DOMAIN;
 
@@ -26,6 +27,10 @@ const ApplyDoctor = () => {
 
   const btnClick = async (e) => {
     e.preventDefault();
+    if (!formDetails.specialization || !formDetails.experience || !formDetails.fees) {
+      return toast.error("Please fill in all medical credentials");
+    }
+
     try {
       await toast.promise(
         axios.post(
@@ -40,58 +45,73 @@ const ApplyDoctor = () => {
           }
         ),
         {
-          success: "Doctor application sent successfully",
-          error: "Unable to send Doctor application",
-          loading: "Sending doctor application...",
+          success: "Doctor application submitted for admin review!",
+          error: "Unable to submit doctor application",
+          loading: "Submitting credentials...",
         }
       );
 
       navigate("/");
     } catch (error) {
-      return error;
+      console.error(error);
     }
   };
 
   return (
     <>
       <Navbar />
-      <section
-        className="register-section flex-center apply-doctor"
-        id="contact"
-      >
-        <div className="register-container flex-center contact">
-          <h2 className="form-heading">Apply for Doctor</h2>
-          <form className="register-form ">
-            <input
-              type="text"
-              name="specialization"
-              className="form-input"
-              placeholder="Enter your specialization"
-              value={formDetails.specialization}
-              onChange={inputChange}
-            />
-            <input
-              type="number"
-              name="experience"
-              className="form-input"
-              placeholder="Enter your experience (in years)"
-              value={formDetails.experience}
-              onChange={inputChange}
-            />
-            <input
-              type="number"
-              name="fees"
-              className="form-input"
-              placeholder="Enter your fees  (in dollars)"
-              value={formDetails.fees}
-              onChange={inputChange}
-            />
-            <button
-              type="submit"
-              className="btn form-btn"
-              onClick={btnClick}
-            >
-              apply
+      <section className="doctor-apply-section">
+        <div className="doctor-apply-card">
+          <div className="doctor-apply-header">
+            <div className="badge badge-primary" style={{ margin: "0 auto 0.75rem" }}>
+              <FaUserMd /> Practitioner Verification
+            </div>
+            <h2>Apply as a Doctor</h2>
+            <p>Join our medical network. Your application will be verified by the admin team.</p>
+          </div>
+
+          <form className="doctor-apply-form" onSubmit={btnClick}>
+            <div className="form-group">
+              <label>Medical Specialization *</label>
+              <input
+                type="text"
+                name="specialization"
+                className="form-input"
+                placeholder="e.g. Cardiologist, Dermatologist, Neurologist"
+                value={formDetails.specialization}
+                onChange={inputChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Years of Clinical Experience *</label>
+              <input
+                type="number"
+                name="experience"
+                className="form-input"
+                placeholder="e.g. 8"
+                value={formDetails.experience}
+                onChange={inputChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Consultation Fee ($ USD) *</label>
+              <input
+                type="number"
+                name="fees"
+                className="form-input"
+                placeholder="e.g. 60"
+                value={formDetails.fees}
+                onChange={inputChange}
+                required
+              />
+            </div>
+
+            <button type="submit" className="btn form-btn">
+              <FaPaperPlane /> Submit Application
             </button>
           </form>
         </div>

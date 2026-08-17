@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom"; 
+import { NavLink, useNavigate } from "react-router-dom";
 import "../styles/register.css";
 import Navbar from "../components/Navbar";
 import axios from "axios";
@@ -11,7 +11,7 @@ function ForgotPassword() {
   const [formDetails, setFormDetails] = useState({
     email: "",
   });
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const inputChange = (e) => {
     const { name, value } = e.target;
@@ -32,38 +32,45 @@ function ForgotPassword() {
     try {
       const response = await axios.post("/user/forgotpassword", { email });
       if (response.status === 200) {
-        toast.success("Password reset email sent successfully!!!!!");
-        navigate('/login'); 
+        toast.success("Password reset link sent to your email!");
+        navigate("/login");
       } else {
         toast.error("Failed to send password reset email");
       }
     } catch (error) {
       console.error("Error sending password reset email:", error);
+      toast.error("Error sending password reset email");
     }
   };
 
   return (
     <>
       <Navbar />
-      <section className="register-section flex-center">
-        <div className="register-container flex-center">
-          <h2 className="form-heading">Forgot Password</h2>
+      <section className="register-section">
+        <div className="register-container">
+          <h2 className="form-heading">Reset Password</h2>
+          <p className="form-subheading">Enter your email and we'll send you a password reset link</p>
+
           <form onSubmit={formSubmit} className="register-form">
             <input
               type="email"
               name="email"
               className="form-input"
-              placeholder="Enter your email"
+              placeholder="Enter your registered email"
               value={formDetails.email}
               onChange={inputChange}
+              required
             />
             <button type="submit" className="btn form-btn">
-              Send Reset Email
+              Send Reset Link
             </button>
           </form>
-          <NavLink className="login-link" to={"/login"}>
-            Back to Login
-          </NavLink>
+
+          <div className="auth-links">
+            <NavLink className="login-link" to={"/login"}>
+              Back to Login
+            </NavLink>
+          </div>
         </div>
       </section>
     </>

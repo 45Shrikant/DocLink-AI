@@ -2,59 +2,54 @@ import "../styles/doctorcard.css";
 import React, { useState } from "react";
 import BookAppointment from "../components/BookAppointment";
 import { toast } from "react-hot-toast";
+import { FaCheckCircle, FaCalendarPlus, FaClock, FaDollarSign } from "react-icons/fa";
 
 const DoctorCard = ({ ele }) => {
   const [modalOpen, setModalOpen] = useState(false);
-  const [token, setToken] = useState(localStorage.getItem("token") || "");
+  const token = localStorage.getItem("token") || "";
 
   const handleModal = () => {
-    if (token === "") {
-      return toast.error("You must log in first");
+    if (!token) {
+      return toast.error("Please log in to book an appointment");
     }
     setModalOpen(true);
   };
 
+  const doctorPic =
+    ele?.userId?.pic ||
+    "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg";
+
+  const doctorName = `Dr. ${ele?.userId?.firstname || ""} ${ele?.userId?.lastname || ""}`.trim();
+
   return (
-    <div className={`card`}>
-      <div className={`card-img flex-center`}>
-        <img
-          src={
-            ele?.userId?.pic ||
-            "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg"
-          }
-          alt="profile"
-        />
+    <div className="doctor-card">
+      <div className="doctor-verified-badge">
+        <FaCheckCircle /> Verified
       </div>
-      <h3 className="card-name">
-        Dr. {ele?.userId?.firstname + " " + ele?.userId?.lastname}
-      </h3>
-      <p className="specialization">
-        <strong>Specialization: </strong>
-        {ele?.specialization}
-      </p>
-      <p className="experience">
-        <strong>Experience: </strong>
-        {ele?.experience}yrs
-      </p>
-      <p className="fees">
-        <strong>Fees per consultation: </strong>$ {ele?.fees}
-      </p>
-      <p className="phone">
-        <strong>Phone: </strong>
-        {ele?.userId?.mobile}
-      </p>
-      <button
-        className="btn appointment-btn"
-        onClick={handleModal}
-      >
-        Book Appointment
+
+      <div className="doctor-avatar-wrapper">
+        <img src={doctorPic} alt={doctorName} className="doctor-avatar-img" />
+      </div>
+
+      <h3 className="doctor-card-name">{doctorName}</h3>
+      <span className="doctor-specialty-pill">{ele?.specialization || "General Physician"}</span>
+
+      <div className="doctor-stats-row">
+        <div className="doctor-stat-item">
+          <span className="stat-label">Experience</span>
+          <span className="stat-value">{ele?.experience ? `${ele.experience} Yrs` : "5+ Yrs"}</span>
+        </div>
+        <div className="doctor-stat-item">
+          <span className="stat-label">Fee</span>
+          <span className="stat-value doctor-fee-highlight">${ele?.fees || 50}</span>
+        </div>
+      </div>
+
+      <button className="btn doctor-book-btn" onClick={handleModal}>
+        <FaCalendarPlus /> Book Appointment
       </button>
-      {modalOpen && (
-        <BookAppointment
-          setModalOpen={setModalOpen}
-          ele={ele}
-        />
-      )}
+
+      {modalOpen && <BookAppointment setModalOpen={setModalOpen} ele={ele} />}
     </div>
   );
 };
