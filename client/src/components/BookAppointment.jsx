@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/bookappointment.css";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { IoMdClose } from "react-icons/io";
-import { FaCalendarCheck, FaCreditCard, FaUserMd } from "react-icons/fa";
+import { FaCalendarCheck, FaCreditCard, FaSpinner } from "react-icons/fa";
 
 axios.defaults.baseURL = process.env.REACT_APP_SERVER_DOMAIN;
 
@@ -17,19 +17,40 @@ const BookAppointment = ({ setModalOpen, ele }) => {
     number: "",
     familyDiseases: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Close modal on ESC key and prevent body background scrolling
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setModalOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "unset";
+    };
+  }, [setModalOpen]);
 
   const inputChange = (e) => {
     const { name, value } = e.target;
-    setFormDetails({
-      ...formDetails,
+    setFormDetails((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
   };
 
-  const doctorName = `Dr. ${ele?.userId?.firstname || ""} ${ele?.userId?.lastname || ""}`.trim();
+  const doctorUserId = ele?.userId?._id || (typeof ele?.userId === "string" ? ele?.userId : ele?._id);
+  const doctorName = `Dr. ${ele?.userId?.firstname || ""} ${ele?.userId?.lastname || ""}`.trim() || "Specialist";
   const doctorPic =
     ele?.userId?.pic ||
     "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg";
+
+  // Minimum date is today
+  const today = new Date().toISOString().split("T")[0];
 
   // Handle Stripe Payment
   const handlePayment = async (e) => {
@@ -38,7 +59,8 @@ const BookAppointment = ({ setModalOpen, ele }) => {
       return toast.error("Please fill Date, Time, and Mobile Number");
     }
 
-    const toastId = toast.loading("Redirecting to Stripe Payment...");
+    setIsSubmitting(true);
+    const toastId = toast.loading("Redirecting to Stripe Checkout...");
     try {
       const { data } = await axios.post("/payment/create-checkout-session", {
         doctorName: doctorName,
@@ -47,10 +69,14 @@ const BookAppointment = ({ setModalOpen, ele }) => {
 
       if (data.url) {
         window.location.href = data.url;
+      } else {
+        toast.error("Could not generate payment session", { id: toastId });
+        setIsSubmitting(false);
       }
     } catch (error) {
-      toast.error("Payment initiation failed", { id: toastId });
-      console.error(error);
+      console.error("Payment error:", error);
+      toast.error(error.response?.data?.error || "Payment initiation failed", { id: toastId });
+      setIsSubmitting(false);
     }
   };
 
@@ -61,41 +87,52 @@ const BookAppointment = ({ setModalOpen, ele }) => {
       return toast.error("Please fill all required fields");
     }
 
+    if (!doctorUserId) {
+      return toast.error("Invalid doctor selection. Please try again.");
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return toast.error("Your session has expired. Please log in again.");
+    }
+
+    setIsSubmitting(true);
+    const toastId = toast.loading("Confirming appointment slot...");
+
     try {
-      await toast.promise(
-        axios.post(
-          "/appointment/bookappointment",
-          {
-            doctorId: ele?.userId?._id,
-            date: formDetails.date,
-            time: formDetails.time,
-            age: formDetails.age,
-            bloodGroup: formDetails.bloodGroup,
-            gender: formDetails.gender,
-            number: formDetails.number,
-            familyDiseases: formDetails.familyDiseases,
-            doctorname: doctorName,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        ),
+      await axios.post(
+        "/appointment/bookappointment",
         {
-          success: "Appointment booked successfully!",
-          error: "Unable to book appointment",
-          loading: "Confirming appointment slot...",
+          doctorId: doctorUserId,
+          date: formDetails.date,
+          time: formDetails.time,
+          age: formDetails.age,
+          bloodGroup: formDetails.bloodGroup,
+          gender: formDetails.gender,
+          number: formDetails.number,
+          familyDiseases: formDetails.familyDiseases,
+          doctorname: doctorName,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
+
+      toast.success("Appointment booked successfully!", { id: toastId });
       setModalOpen(false);
     } catch (error) {
-      console.error(error);
+      console.error("Booking error:", error);
+      const errorMsg = error.response?.data?.message || error.response?.data || "Unable to book appointment";
+      toast.error(typeof errorMsg === "string" ? errorMsg : "Unable to book appointment", { id: toastId });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="modal-overlay" onClick={() => setModalOpen(false)}>
+    <div className="modal-overlay" onClick={() => !isSubmitting && setModalOpen(false)}>
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="modal-doctor-info">
@@ -105,7 +142,12 @@ const BookAppointment = ({ setModalOpen, ele }) => {
               <p>{ele?.specialization || "Specialist"} • ${ele?.fees || 50} Consultation</p>
             </div>
           </div>
-          <button className="modal-close-btn" onClick={() => setModalOpen(false)}>
+          <button
+            type="button"
+            className="modal-close-btn"
+            disabled={isSubmitting}
+            onClick={() => setModalOpen(false)}
+          >
             <IoMdClose />
           </button>
         </div>
@@ -118,10 +160,12 @@ const BookAppointment = ({ setModalOpen, ele }) => {
                 <input
                   type="date"
                   name="date"
+                  min={today}
                   className="form-input"
                   value={formDetails.date}
                   onChange={inputChange}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="form-group">
@@ -133,6 +177,7 @@ const BookAppointment = ({ setModalOpen, ele }) => {
                   value={formDetails.time}
                   onChange={inputChange}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -143,11 +188,14 @@ const BookAppointment = ({ setModalOpen, ele }) => {
                 <input
                   type="number"
                   name="age"
+                  min="1"
+                  max="120"
                   placeholder="e.g. 32"
                   className="form-input"
                   value={formDetails.age}
                   onChange={inputChange}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="form-group">
@@ -158,6 +206,7 @@ const BookAppointment = ({ setModalOpen, ele }) => {
                   value={formDetails.gender}
                   onChange={inputChange}
                   required
+                  disabled={isSubmitting}
                 >
                   <option value="">Select Gender</option>
                   <option value="male">Male</option>
@@ -177,6 +226,7 @@ const BookAppointment = ({ setModalOpen, ele }) => {
                   className="form-input"
                   value={formDetails.bloodGroup}
                   onChange={inputChange}
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="form-group">
@@ -189,12 +239,13 @@ const BookAppointment = ({ setModalOpen, ele }) => {
                   value={formDetails.number}
                   onChange={inputChange}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
 
             <div className="form-group">
-              <label>Medical History / Symptoms Notes</label>
+              <label>Medical History / Symptoms Notes (Optional)</label>
               <textarea
                 name="familyDiseases"
                 placeholder="Mention any existing conditions, allergies, or symptoms..."
@@ -202,6 +253,7 @@ const BookAppointment = ({ setModalOpen, ele }) => {
                 value={formDetails.familyDiseases}
                 onChange={inputChange}
                 rows="3"
+                disabled={isSubmitting}
               ></textarea>
             </div>
 
@@ -209,14 +261,24 @@ const BookAppointment = ({ setModalOpen, ele }) => {
               <button
                 type="button"
                 className="btn btn-book-regular"
+                disabled={isSubmitting}
                 onClick={bookAppointment}
               >
-                <FaCalendarCheck /> Book Only
+                {isSubmitting ? (
+                  <>
+                    <FaSpinner className="spinner-icon" /> Processing...
+                  </>
+                ) : (
+                  <>
+                    <FaCalendarCheck /> Book Only
+                  </>
+                )}
               </button>
 
               <button
                 type="button"
                 className="btn btn-book-pay"
+                disabled={isSubmitting}
                 onClick={handlePayment}
               >
                 <FaCreditCard /> Pay & Book (${ele?.fees || 50})

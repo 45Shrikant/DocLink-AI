@@ -4,15 +4,16 @@ import BookAppointment from "../components/BookAppointment";
 import { toast } from "react-hot-toast";
 import { FaCheckCircle, FaCalendarPlus, FaClock, FaDollarSign } from "react-icons/fa";
 
-const DoctorCard = ({ ele }) => {
-  const [modalOpen, setModalOpen] = useState(false);
+const DoctorCard = ({ ele, onBook }) => {
   const token = localStorage.getItem("token") || "";
 
   const handleModal = () => {
     if (!token) {
       return toast.error("Please log in to book an appointment");
     }
-    setModalOpen(true);
+    if (onBook) {
+      onBook(ele);
+    }
   };
 
   const doctorPic =
@@ -48,8 +49,6 @@ const DoctorCard = ({ ele }) => {
       <button className="btn doctor-book-btn" onClick={handleModal}>
         <FaCalendarPlus /> Book Appointment
       </button>
-
-      {modalOpen && <BookAppointment setModalOpen={setModalOpen} ele={ele} />}
     </div>
   );
 };

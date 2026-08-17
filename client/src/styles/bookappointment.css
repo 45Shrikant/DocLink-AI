@@ -26,12 +26,21 @@
   border: 1px solid var(--border);
   position: relative;
   overflow: hidden;
-  animation: modalScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: modalScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes modalScaleIn {
-  from { opacity: 0; transform: scale(0.94) translateY(10px); }
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.spinner-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .modal-header {

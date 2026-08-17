@@ -21,40 +21,54 @@ const getallappointments = async (req, res) => {
 
 const bookappointment = async (req, res) => {
   try {
-    const appointment = await Appointment({
-      date: req.body.date,
-      time: req.body.time,
-      age: req.body.age,
-      bloodGroup: req.body.bloodGroup,
-      gender: req.body.gender,
-      number: req.body.number,
-      familyDiseases: req.body.familyDiseases,
-      // prescription: req.body.prescription,
-      doctorId: req.body.doctorId,
+    const {
+      date,
+      time,
+      age,
+      bloodGroup,
+      gender,
+      number,
+      familyDiseases,
+      doctorId,
+      doctorname,
+    } = req.body;
+
+    if (!date || !time || !age || !gender || !number || !doctorId) {
+      return res.status(400).send("Please provide all required fields");
+    }
+
+    const appointment = new Appointment({
+      date,
+      time,
+      age: Number(age),
+      bloodGroup: bloodGroup || "",
+      gender,
+      number: String(number),
+      familyDiseases: familyDiseases || "",
+      doctorId,
       userId: req.locals,
     });
-
-    const usernotification = Notification({
-      userId: req.locals,
-      content: `You booked an appointment with Dr. ${req.body.doctorname} for ${req.body.date} ${req.body.time}`,
-    });
-
-    await usernotification.save();
 
     const user = await User.findById(req.locals);
+    const patientName = user ? `${user.firstname} ${user.lastname}` : "Patient";
 
-    const doctornotification = Notification({
-      userId: req.body.doctorId,
-      content: `You have an appointment with ${user.firstname} ${user.lastname} on ${req.body.date} at ${req.body.time} Age: ${user.age} bloodGropu: ${user.bloodGroup} Gender: ${user.gender} Mobile Number:${user.number} Family Diseases ${user.familyDiseases}` ,
+    const usernotification = new Notification({
+      userId: req.locals,
+      content: `You booked an appointment with Dr. ${doctorname || "Doctor"} for ${date} at ${time}`,
     });
+    await usernotification.save();
 
+    const doctornotification = new Notification({
+      userId: doctorId,
+      content: `New appointment booked by ${patientName} on ${date} at ${time} (Age: ${age}, Gender: ${gender}, Contact: ${number})`,
+    });
     await doctornotification.save();
 
     const result = await appointment.save();
-    return res.status(201).send(result);
+    return res.status(201).json(result);
   } catch (error) {
-    console.log("error", error);
-    res.status(500).send("Unable to book appointment");
+    console.error("Error booking appointment:", error);
+    res.status(500).send(error.message || "Unable to book appointment");
   }
 };
 

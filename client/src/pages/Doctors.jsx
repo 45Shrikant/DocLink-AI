@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import DoctorCard from "../components/DoctorCard";
+import BookAppointment from "../components/BookAppointment";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import "../styles/doctors.css";
@@ -12,6 +13,7 @@ import { FaSearch, FaUserMd } from "react-icons/fa";
 
 const Doctors = () => {
   const [doctors, setDoctors] = useState([]);
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("all");
   const dispatch = useDispatch();
@@ -96,11 +98,22 @@ const Doctors = () => {
         ) : filteredDoctors.length > 0 ? (
           <div className="doctors-card-container">
             {filteredDoctors.map((ele) => (
-              <DoctorCard ele={ele} key={ele._id} />
+              <DoctorCard
+                ele={ele}
+                key={ele._id}
+                onBook={(doctor) => setSelectedDoctor(doctor)}
+              />
             ))}
           </div>
         ) : (
           <Empty />
+        )}
+
+        {selectedDoctor && (
+          <BookAppointment
+            setModalOpen={() => setSelectedDoctor(null)}
+            ele={selectedDoctor}
+          />
         )}
       </section>
       <Footer />

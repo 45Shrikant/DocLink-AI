@@ -34,7 +34,7 @@ const schema = mongoose.Schema(
       enum: ["male", "female", "other"],
     },
     number: {
-      type: Number,
+      type: String,
       required: true,
     },
     familyDiseases: {
