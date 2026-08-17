@@ -9,7 +9,14 @@ export const useSocket = () => {
 };
 
 export const SocketProvider = (props) => {
-  const socket = useMemo(() => io("http://localhost:5015/"), []);
+  const socket = useMemo(() => {
+    const serverUrl =
+      process.env.REACT_APP_SOCKET_URL ||
+      (process.env.REACT_APP_SERVER_DOMAIN
+        ? process.env.REACT_APP_SERVER_DOMAIN.replace(/\/api\/?$/, "")
+        : "http://localhost:5015");
+    return io(serverUrl);
+  }, []);
 
   return (
     <SocketContext.Provider value={socket}>
